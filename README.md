@@ -11,3 +11,14 @@ you see a chart with the income and expences for that month, and you can select 
 * compair your monthly finaces with other months
 * get easy to read information over your financial situation
 * get inshight where you might be able to reduce expences.
+
+# FAQ
+
+*is this program easy to use?
+Yes, this program is made for everybody. this means even somebody who never uses a computer before.
+
+*
+
+*
+
+*
