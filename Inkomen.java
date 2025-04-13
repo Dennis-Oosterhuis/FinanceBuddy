@@ -11,7 +11,16 @@ public class Inkomen {
         return bedrag;
     }
 
+    public String getBron() {
+        return bron;
+    }
+
     public String getDetails() {
         return "Inkomen: " + bedrag + " EUR, Bron: " + bron;
+    }
+
+    @Override
+    public String toString() {
+        return getDetails();
     }
 }

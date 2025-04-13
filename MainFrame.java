@@ -1,7 +1,9 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.awt.event.*;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MainFrame extends JFrame {
 
@@ -11,15 +13,14 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         setTitle("Financiën Overzicht");
-        setSize(600, 400);
+        setSize(700, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
         gebruiker = new Gebruiker("Naam", "email@voorbeeld.com");
 
         // Panel voor gebruikersinvoer (naam, email)
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new GridLayout(3, 2));
+        JPanel inputPanel = new JPanel(new GridLayout(3, 2));
         inputPanel.add(new JLabel("Naam:"));
         naamField = new JTextField();
         inputPanel.add(naamField);
@@ -27,20 +28,14 @@ public class MainFrame extends JFrame {
         emailField = new JTextField();
         inputPanel.add(emailField);
 
-        // Knop om gegevens op te slaan
-        JButton saveButton = new JButton("Opslaan");
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gebruiker = new Gebruiker(naamField.getText(), emailField.getText());
-            }
+        JButton saveButton = new JButton("Gegevens instellen");
+        saveButton.addActionListener(e -> {
+            gebruiker = new Gebruiker(naamField.getText(), emailField.getText());
         });
-
         inputPanel.add(saveButton);
 
-        // Panel voor inkomens- en uitgaveninvoer
-        JPanel dataPanel = new JPanel();
-        dataPanel.setLayout(new GridLayout(3, 2));
+        // Panel voor bedrag, bron, categorie
+        JPanel dataPanel = new JPanel(new GridLayout(3, 2));
         dataPanel.add(new JLabel("Bedrag:"));
         bedragField = new JTextField();
         dataPanel.add(bedragField);
@@ -51,57 +46,121 @@ public class MainFrame extends JFrame {
         categorieField = new JTextField();
         dataPanel.add(categorieField);
 
-        // Knoppen om inkomen en uitgave toe te voegen
+        // Panel met knoppen
+        JPanel buttonPanel = new JPanel();
+
         JButton addIncomeButton = new JButton("Inkomen toevoegen");
-        addIncomeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    double bedrag = Double.parseDouble(bedragField.getText());
-                    String bron = bronField.getText();
-                    Inkomen inkomen = new Inkomen(bedrag, bron);
-                    gebruiker.voegInkomenToe(inkomen);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Voer een geldig bedrag in.");
-                }
+        addIncomeButton.addActionListener(e -> {
+            try {
+                double bedrag = Double.parseDouble(bedragField.getText());
+                String bron = bronField.getText();
+                Inkomen inkomen = new Inkomen(bedrag, bron);
+                gebruiker.voegInkomenToe(inkomen);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Voer een geldig bedrag in.");
             }
         });
 
         JButton addExpenseButton = new JButton("Uitgave toevoegen");
-        addExpenseButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    double bedrag = Double.parseDouble(bedragField.getText());
-                    String categorie = categorieField.getText();
-                    Uitgave uitgave = new Uitgave(bedrag, categorie);
-                    gebruiker.voegUitgaveToe(uitgave);
-                } catch (NumberFormatException ex) {
-                    JOptionPane.showMessageDialog(null, "Voer een geldig bedrag in.");
-                }
+        addExpenseButton.addActionListener(e -> {
+            try {
+                double bedrag = Double.parseDouble(bedragField.getText());
+                String categorie = categorieField.getText();
+                Uitgave uitgave = new Uitgave(bedrag, categorie);
+                gebruiker.voegUitgaveToe(uitgave);
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(null, "Voer een geldig bedrag in.");
             }
         });
 
-        // Paneel voor overzicht en knoppen
-        JPanel buttonPanel = new JPanel();
         JButton showOverviewButton = new JButton("Toon Overzicht");
-        showOverviewButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                overzichtArea.setText("");  // Reset het overzicht
-                overzichtArea.append(gebruiker.toonOverzicht());  // Toon het overzicht in de JTextArea
+        showOverviewButton.addActionListener(e -> {
+            overzichtArea.setText(gebruiker.toonOverzicht());
+        });
+
+        JButton saveToFileButton = new JButton("Opslaan naar Bestand");
+        saveToFileButton.addActionListener(e -> {
+            if (naamField.getText().isEmpty() || emailField.getText().isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Vul naam en e-mail in om op te slaan.");
+                return;
+            }
+
+            try (PrintWriter writer = new PrintWriter(new FileWriter("gebruikersdata.txt", true))) {
+                writer.println("Naam: " + naamField.getText());
+                writer.println("Email: " + emailField.getText());
+                for (Inkomen i : gebruiker.getInkomens()) {
+                    writer.println("Inkomen: " + i.getBedrag() + "," + i.getBron());
+                }
+                for (Uitgave u : gebruiker.getUitgaven()) {
+                    writer.println("Uitgave: " + u.getBedrag() + "," + u.getCategorie());
+                }
+                writer.println("---");
+                JOptionPane.showMessageDialog(null, "Gegevens opgeslagen.");
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Fout bij opslaan: " + ex.getMessage());
+            }
+        });
+
+        JButton loadFromFileButton = new JButton("Laad Gebruiker");
+        loadFromFileButton.addActionListener(e -> {
+            String naam = naamField.getText();
+            String email = emailField.getText();
+            if (naam.isEmpty() || email.isEmpty()) {
+                JOptionPane.showMessageDialog(null, "Vul naam en e-mail in om te laden.");
+                return;
+            }
+
+            try (BufferedReader reader = new BufferedReader(new FileReader("gebruikersdata.txt"))) {
+                String line;
+                boolean gevonden = false;
+                List<Inkomen> geladenInkomens = new ArrayList<>();
+                List<Uitgave> geladenUitgaven = new ArrayList<>();
+
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("Naam: ") && line.substring(6).equals(naam)) {
+                        line = reader.readLine();
+                        if (line != null && line.startsWith("Email: ") && line.substring(7).equals(email)) {
+                            gevonden = true;
+                            while ((line = reader.readLine()) != null && !line.equals("---")) {
+                                if (line.startsWith("Inkomen: ")) {
+                                    String[] parts = line.substring(9).split(",");
+                                    double bedrag = Double.parseDouble(parts[0]);
+                                    String bron = parts[1];
+                                    geladenInkomens.add(new Inkomen(bedrag, bron));
+                                } else if (line.startsWith("Uitgave: ")) {
+                                    String[] parts = line.substring(9).split(",");
+                                    double bedrag = Double.parseDouble(parts[0]);
+                                    String cat = parts[1];
+                                    geladenUitgaven.add(new Uitgave(bedrag, cat));
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
+
+                if (gevonden) {
+                    gebruiker = new Gebruiker(naam, email);
+                    for (Inkomen i : geladenInkomens) gebruiker.voegInkomenToe(i);
+                    for (Uitgave u : geladenUitgaven) gebruiker.voegUitgaveToe(u);
+                    JOptionPane.showMessageDialog(null, "Gebruiker geladen!");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Gebruiker niet gevonden of email onjuist.");
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(null, "Fout bij laden: " + ex.getMessage());
             }
         });
 
         buttonPanel.add(addIncomeButton);
         buttonPanel.add(addExpenseButton);
         buttonPanel.add(showOverviewButton);
+        buttonPanel.add(saveToFileButton);
+        buttonPanel.add(loadFromFileButton);
 
-        // Textarea voor overzicht
         overzichtArea = new JTextArea(10, 40);
         overzichtArea.setEditable(false);
 
-        // Voeg alle panels toe aan het hoofdframe
         add(inputPanel, BorderLayout.NORTH);
         add(dataPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
@@ -109,12 +168,9 @@ public class MainFrame extends JFrame {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                MainFrame frame = new MainFrame();
-                frame.setVisible(true);
-            }
+        SwingUtilities.invokeLater(() -> {
+            MainFrame frame = new MainFrame();
+            frame.setVisible(true);
         });
     }
 }

@@ -11,7 +11,16 @@ public class Uitgave {
         return bedrag;
     }
 
+    public String getCategorie() {
+        return categorie;
+    }
+
     public String getDetails() {
         return "Uitgave: " + bedrag + " EUR, Categorie: " + categorie;
+    }
+
+    @Override
+    public String toString() {
+        return getDetails();
     }
 }
