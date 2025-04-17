@@ -29,3 +29,7 @@ Yes, there is a switch user button that allows you to add a new user of switch t
 * Is this program free?
 
 Yes, it is free to use.
+
+* where can i report bugs/problems?
+
+You can send reports to: finance.buddy1999@gmail.com
