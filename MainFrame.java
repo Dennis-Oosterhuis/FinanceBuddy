@@ -13,7 +13,7 @@ public class MainFrame extends JFrame {
 
     public MainFrame() {
         setTitle("Financiën Overzicht");
-        setSize(700, 500);
+        setSize(700, 550);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
@@ -74,9 +74,7 @@ public class MainFrame extends JFrame {
         });
 
         JButton showOverviewButton = new JButton("Toon Overzicht");
-        showOverviewButton.addActionListener(e -> {
-            overzichtArea.setText(gebruiker.toonOverzicht());
-        });
+        showOverviewButton.addActionListener(e -> overzichtArea.setText(gebruiker.toonOverzicht()));
 
         JButton saveToFileButton = new JButton("Opslaan naar Bestand");
         saveToFileButton.addActionListener(e -> {
@@ -145,7 +143,7 @@ public class MainFrame extends JFrame {
                     for (Uitgave u : geladenUitgaven) gebruiker.voegUitgaveToe(u);
                     JOptionPane.showMessageDialog(null, "Gebruiker geladen!");
                 } else {
-                    JOptionPane.showMessageDialog(null, "Gebruiker niet gevonden of email onjuist.");
+                    JOptionPane.showMessageDialog(null, "Gebruiker niet gevonden of e-mail onjuist.");
                 }
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(null, "Fout bij laden: " + ex.getMessage());
@@ -161,10 +159,38 @@ public class MainFrame extends JFrame {
         overzichtArea = new JTextArea(10, 40);
         overzichtArea.setEditable(false);
 
+        // Footer voor contactinformatie
+        JPanel footerPanel = new JPanel();
+        footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.Y_AXIS));
+        footerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        JButton contactButton = new JButton("Neem contact op");
+        contactButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contactButton.addActionListener(e -> {
+            try {
+                Desktop desktop = Desktop.getDesktop();
+                String mailto = "mailto:finance.buddy1999@gmail.com?subject=Feedback%20voor%20Finance%20Buddy";
+                desktop.mail(new java.net.URI(mailto));
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(null,
+                        "Kon het e-mailprogramma niet openen.\nMail handmatig naar: finance.buddy1999@gmail.com");
+            }
+        });
+
+        JLabel contactLabel = new JLabel("Voor problemen of verbeteringen mail naar finance.buddy1999@gmail.com");
+        contactLabel.setFont(new Font("Arial", Font.ITALIC, 12));
+        contactLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        footerPanel.add(contactButton);
+        footerPanel.add(Box.createVerticalStrut(5));
+        footerPanel.add(contactLabel);
+
+        // Voeg alle componenten toe aan het hoofdframe
         add(inputPanel, BorderLayout.NORTH);
         add(dataPanel, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
         add(new JScrollPane(overzichtArea), BorderLayout.EAST);
+        add(footerPanel, BorderLayout.PAGE_END);
     }
 
     public static void main(String[] args) {
